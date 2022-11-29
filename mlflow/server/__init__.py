@@ -2,8 +2,11 @@ import os
 import shlex
 import sys
 import textwrap
+import logging
 
 from flask import Flask, send_from_directory, Response
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 from mlflow.server import handlers
 from mlflow.server.handlers import (
@@ -27,7 +30,10 @@ ARTIFACTS_ONLY_ENV_VAR = "_MLFLOW_SERVER_ARTIFACTS_ONLY"
 
 REL_STATIC_DIR = "js/build"
 
+logger = logging.getLogger("mlflow")
+
 app = Flask(__name__, static_folder=REL_STATIC_DIR)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 STATIC_DIR = os.path.join(app.root_path, REL_STATIC_DIR)
 
 
@@ -42,6 +48,12 @@ if os.getenv(PROMETHEUS_EXPORTER_ENV_VAR):
         os.makedirs(prometheus_metrics_path)
     activate_prometheus_exporter(app)
 
+    
+@app.after_request
+def add_same_origin(response):
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
+
 
 # Provide a health check endpoint to ensure the application is responsive
 @app.route("/health")
@@ -53,7 +65,6 @@ def health():
 @app.route("/version")
 def version():
     return VERSION, 200
-
 
 # Serve the "get-artifact" route.
 @app.route(_add_static_prefix("/get-artifact"))
@@ -71,7 +82,9 @@ def serve_model_version_artifact():
 # CSS/JS resources will be made to e.g. /static-files/main.css and we can handle them here.
 @app.route(_add_static_prefix("/static-files/<path:path>"))
 def serve_static_file(path):
-    return send_from_directory(STATIC_DIR, path)
+    resp = send_from_directory(STATIC_DIR, path)
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return resp 
 
 
 # Serve the index.html for the React App for all other routes.

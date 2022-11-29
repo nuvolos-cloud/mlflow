@@ -1077,9 +1077,9 @@ class Utils {
 
   static isUsingExternalRouter() {
     // Running inside the iFrame indicates that we're using externally managed routing.
-    if (window.self !== window.top || window.isTestingIframe) {
-      return true;
-    }
+    // if (window.self !== window.top || window.isTestingIframe) {
+    //   return true;
+    // }
 
     return false;
   }

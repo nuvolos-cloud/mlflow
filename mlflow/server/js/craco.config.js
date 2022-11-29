@@ -287,6 +287,9 @@ module.exports = function ({ env }) {
       },
     },
     webpack: {
+      headers: {
+        'X-Frame-Options': 'SAMEORIGIN'
+      },
       resolve: {
         fallback: {
           buffer: require.resolve('buffer'), // Needed by js-yaml
@@ -298,6 +301,26 @@ module.exports = function ({ env }) {
         webpackConfig = i18nOverrides(webpackConfig);
         webpackConfig = configureIframeCSSPublicPaths(webpackConfig, env);
         webpackConfig = enableOptionalTypescript(webpackConfig);
+        // // Find the terser plugin by looking for "extractComments"
+        // const minimizerIndex = webpackConfig.optimization.minimizer.findIndex(
+        //   (item) => item.options.extractComments
+        // );
+
+        // if (minimizerIndex !== -1) {
+        //   let terserPluginOptions =
+        //     webpackConfig.optimization.minimizer[minimizerIndex].options
+        //       .minimizer.options;
+
+        //   terserPluginOptions = {
+        //     ...terserPluginOptions,
+        //     keep_classnames: true,
+        //     keep_fnames: true,
+        //   };
+
+        //   webpackConfig.optimization.minimizer[
+        //     minimizerIndex
+        //   ].options.minimizer.options = terserPluginOptions;
+        // }
         console.log('Webpack config:', webpackConfig);
         return webpackConfig;
       },
